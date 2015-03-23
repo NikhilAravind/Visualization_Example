@@ -112,15 +112,21 @@ function getData(selected){
 
 			categoryNames['Undefined Category'] = 'Undefined Category';
 
-			console.log(categoryNames);
+			//console.log(categoryNames);
 
 			
 			//Based on user's rendering preference, the appropriate render methos is called.
 			if(selected=='bar'){
+				$('#chart1').empty();
+				$('#cal-heatmap').empty();
 				renderBarChart(data, categoryNames);
 			}else if(selected=='pie'){
+				$('#chart2').empty();
+				$('#cal-heatmap').empty();
 				renderPieChart(data, categoryNames);
 			}else if(selected=='heatmap'){
+				$('#chart1').empty();
+				$('#chart2').empty();
 				renderHeatmap(data);
 			}else if(selected=='all'){
 				renderBarChart(data, categoryNames);
@@ -194,8 +200,8 @@ function renderBarChart(data, categoriesByName){
 	    categoryNames.push(allCategories[allCategories.length-1]);
 
 	    categoryNames.pop();
-	    console.log(categoryNames);
-	    console.log(categoryCount);
+	    //console.log(categoryNames);
+	    //console.log(categoryCount);
 
 	    /*if(categoryNames.length!=categoryCount.length)
 	    	categoryNames.push('Undefined Category');*/
@@ -298,8 +304,8 @@ function renderPieChart(data, categoriesByName){
 	   /* if(categoryNamesPie.length!=categoryCountPie.length)
 	    	categoryNamesPie.push('Undefined Category');*/
 	   
-	    console.log(categoryNamesPie);
-	    console.log(categoryCountPie);
+	    //console.log(categoryNamesPie);
+	    //console.log(categoryCountPie);
 	    
 	    var chart = c3.generate({
         		bindto: '#chart1',
@@ -345,8 +351,8 @@ function renderHeatmap(data){
 
 		 };
 
-		 console.log(UTCDates);
-		 console.log(allDates);
+		 //console.log(UTCDates);
+		 //console.log(allDates);
 
 		var datesOfEvents = [];
 		var countOfEvent = [];
@@ -381,7 +387,7 @@ function renderHeatmap(data){
 
 	    var heatMapJSON = JSON.stringify(eventDateData);
 	   	heatMapJSON = heatMapJSON.substring(1, heatMapJSON.length-1);
-	   	console.log(heatMapJSON);
+	   	//console.log(heatMapJSON);
 
 	   	document.getElementById('cal-heatmap').innerHTML = '';
 

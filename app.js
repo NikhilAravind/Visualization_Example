@@ -5,5 +5,5 @@ app.set('views',__dirname + '/views');
 app.set('view engine', 'jade');
 
 var server=app.listen(3000,function(){
-console.log("We have started our server on port 3000");
+console.log("Server listening on port 3000");
 });
