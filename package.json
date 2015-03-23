@@ -1,0 +1,13 @@
+{
+  "name": "Eventbrite-Visualizations",
+  "version": "0.0.1",
+  "private": "true",
+  "dependencies": {
+    "ejs": "^2.3.1",
+    "express": "3.0.0alpha4",
+    "mongodb": "*",
+    "jade": "*",
+    "nib": "*",
+    "stylus": "*"
+  }
+}

@@ -1,0 +1,404 @@
+<html>
+<head>
+<title>
+	Eventbrite - Visualizations
+</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.9/c3.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.9/c3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.min.js"></script>
+<link rel="stylesheet" href="//cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.css" />
+
+</head>
+<body>
+
+<label>Select location: </label>
+<select id="venue.city" >
+	<option>All</option>
+	<option>Phoenix</option>
+	<option>Dallas</option>
+	<option>Boston</option>
+	<option>Denver</option>
+</select>
+
+<br><br>
+
+<label>Select timeframe: </label>
+<select id="start_date.keyword" >
+	<option>All</option>
+	<option>today</option>
+	<option>tomorrow</option>
+	<option>this_week</option>
+	<option>this_weekend</option>
+	<option>next_week</option>
+	<option>this_month</option>
+</select>
+
+<br><br>
+
+<label>Select type of visualization: </label>
+<div>
+	<input type="radio" name="chart" value="bar" checked="true">Bar Chart<br>
+	<input type="radio" name="chart" value="pie">Pie/Donut Chart<br>
+	<input type="radio" name="chart" value="heatmap">Heatmap<br>
+	<input type="radio" name="chart" value="all">All<br><br><br>
+</div>
+
+<input type="button" onclick="chartSelector()" value="Visualize it!"></input><br>
+<br>
+<div id="loading"></div>
+
+<p id="eventCount"></p>	
+
+<div>
+	<div id="chart1" style="width:50%; display: inline-block"></div><div id="chart2" style="width:50%; display: inline-block;"></div>
+	<div id="chart3" width="50%"></div>
+	</br></br>
+	
+	<div id="cal-heatmap"></div>
+</div>
+
+<!-- <div id="chart1" ></div>
+<div id="chart2" ></div>
+<div id="cal-heatmap"></div> -->
+
+<script type="text/javascript">
+
+function chartSelector(){
+	var selected = document.querySelector('input[name="chart"]:checked').value;
+	getData(selected);
+}
+
+
+//This method is responsible to get Eventbrite Data 
+function getData(selected){
+
+	var api_request = "/getAllPopularEvents?popular=true";
+	var venue = document.getElementById('venue.city');
+	var start_date = document.getElementById('start_date.keyword');
+
+	var location = venue.options[venue.selectedIndex].innerHTML;
+	if(location!='All')
+		api_request = api_request + "&city="+location;
+
+	var start_date = start_date.options[start_date.selectedIndex].innerHTML;
+	if(start_date!='All')
+		api_request = api_request + "&start_date="+start_date;
+
+	//Loading GIF..
+	var elem = document.createElement("img");
+	elem.setAttribute("alt", "Flower");
+	elem.src = 'https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/fancybox_loading.gif';
+	document.getElementById("loading").appendChild(elem);
+	
+
+	//AJAX call to request data - Hits the node server.
+	$.get(api_request, function(data, status){
+		data = JSON.parse(data);
+		document.getElementById("loading").removeChild(elem);
+
+		$.get("/getCategoryInfo", function(categories, status){
+			
+			categories = JSON.parse(categories);
+			var categoryLength = categories['categories'].length;
+			var categoryNames = {};
+
+			for (var i = 0; i < categoryLength; i++) {
+				categoryNames[categories['categories'][i]['id']] = categories['categories'][i]['name'];
+			};
+
+			categoryNames['Undefined Category'] = 'Undefined Category';
+
+			console.log(categoryNames);
+
+			
+			//Based on user's rendering preference, the appropriate render methos is called.
+			if(selected=='bar'){
+				renderBarChart(data, categoryNames);
+			}else if(selected=='pie'){
+				renderPieChart(data, categoryNames);
+			}else if(selected=='heatmap'){
+				renderHeatmap(data);
+			}else if(selected=='all'){
+				renderBarChart(data, categoryNames);
+				renderPieChart(data, categoryNames);
+				renderHeatmap(data);
+			}
+		},"json");
+	}, "json");
+
+}
+
+
+//Renders the bar chart
+function renderBarChart(data, categoriesByName){
+	
+	var start_date = document.getElementById('start_date.keyword');
+	start_date = start_date.options[start_date.selectedIndex].innerHTML;
+
+	var number_of_events = data['events'].length;
+        document.getElementById('eventCount').innerHTML = 'The number of events in the selected location are: '+data['events'].length;
+
+        var allCategories = new Array(number_of_events);
+        
+        var jsonData = {};
+        
+        for (var i = 0; i < number_of_events; i++) {
+       	 	
+        	if(data['events'][i]['category_id']==null){
+        		allCategories[i] = 'Undefined Category';
+
+        	}else{
+        		//`(data['events'][i]['category_id']);
+        		allCategories[i] = data['events'][i]['category_id'];
+        	}
+        };
+      
+
+        allCategories.sort();
+        
+        var categoryNames = [];
+        var categoryCount = [];
+
+        categoryCount.push(start_date);
+        categoryNames.push('x');
+
+	    var current = null;
+	    var counter = 0;
+	    for (var i = 0; i < allCategories.length; i++) {
+	        if (allCategories[i] != current) {
+	            if (counter > 0) {
+	                //document.write(current + ' comes --> ' + counter + ' times<br>');
+	                //categoryNames.push(current);
+	                var currentName = current + '';
+	                categoryNames.push(categoriesByName[currentName]);
+	        		categoryCount.push(counter);
+	            }
+	            current = allCategories[i];
+	            counter = 1;
+	        } else {
+	            counter++;
+	        }
+	    }
+	    if (counter > 0) {
+	        //document.write(current + ' comes --> ' + counter + ' times');
+	        //categoryNames.push(current);
+	        var currentName = current + '';
+            categoryNames.push(categoriesByName[currentName]);
+	        categoryCount.push(counter);
+	    }	   
+
+	    categoryNames.push(allCategories[allCategories.length-1]);
+
+	    categoryNames.pop();
+	    console.log(categoryNames);
+	    console.log(categoryCount);
+
+	    /*if(categoryNames.length!=categoryCount.length)
+	    	categoryNames.push('Undefined Category');*/
+
+	     var chart2 = c3.generate({
+        		bindto: '#chart2',
+        	    data: {
+        	    	x : 'x',
+        	    	columns: [
+					categoryNames,
+					categoryCount
+        	       ],
+        	        type: 'bar'
+        	    },
+        	    grid: {
+        	        y: {
+        	            lines: [{value:0}],
+        	            show: true
+        	        },
+        	        x: {
+        	        	show: true
+        	        }
+        	    },
+        	    axis: {
+        	        x: {
+        	        	 type: 'categorized'
+           
+        	        }
+           
+        	    },
+        	    zoom:{
+        	    	enabled: true
+        	    }
+	       	});
+
+
+}
+
+
+//Renders the pie chart
+function renderPieChart(data, categoriesByName){
+
+	var start_date = document.getElementById('start_date.keyword');
+	start_date = start_date.options[start_date.selectedIndex].innerHTML;
+	
+	var number_of_events = data['events'].length;
+        document.getElementById('eventCount').innerHTML = 'The number of events in the selected location are: '+data['events'].length;
+
+        var allCategories = new Array(number_of_events);
+        
+        var jsonData = {};
+        
+        for (var i = 0; i < number_of_events; i++) {
+       	 	
+        	if(data['events'][i]['category_id']==null){
+        		allCategories[i] = 'Undefined Category';
+
+        	}else{
+        		//`(data['events'][i]['category_id']);
+        		allCategories[i] = data['events'][i]['category_id'];
+        	}
+        };
+      
+
+        allCategories.sort();
+
+        var categoryNamesPie = [];
+        var categoryCountPie = [];
+
+        categoryCountPie.push(start_date);
+        categoryNamesPie.push('x');
+
+	    var current = null;
+	    var counter = 0;
+	    for (var i = 0; i < allCategories.length; i++) {
+	        if (allCategories[i] != current) {
+	            if (counter > 0) {
+	                //document.write(current + ' comes --> ' + counter + ' times<br>');
+	                var currentName = current + '';
+	                categoryNamesPie.push(categoriesByName[currentName]);
+	        		categoryCountPie.push(counter);
+	            }
+	            current = allCategories[i];
+	            counter = 1;
+	        } else {
+	            counter++;
+	        }
+	    }
+	    if (counter > 0) {
+	        //document.write(current + ' comes --> ' + counter + ' times');
+	        var currentName = current + '';
+	        categoryNamesPie.push(categoriesByName[currentName]);
+	        categoryCountPie.push(counter);
+	    }	   
+
+	    categoryNamesPie.push(allCategories[allCategories.length-1]);
+
+	    categoryNamesPie.pop();
+	   
+	   /* if(categoryNamesPie.length!=categoryCountPie.length)
+	    	categoryNamesPie.push('Undefined Category');*/
+	   
+	    console.log(categoryNamesPie);
+	    console.log(categoryCountPie);
+	    
+	    var chart = c3.generate({
+        		bindto: '#chart1',
+        	    data: {
+        	    	x : 'x',
+        	    	rows: [
+					categoryNamesPie,
+					categoryCountPie
+        	       ],
+        	        type: 'pie'
+        	    },
+        	    grid: {
+        	        y: {
+        	            lines: [{value:0}]
+        	        }
+        	    },
+        	    axis: {
+        	        x: {
+        	        	 type: 'categorized'
+           
+        	        }
+           
+        	    }
+	       	});
+
+}
+
+
+//Renders the heatmap
+function renderHeatmap(data){
+
+		var number_of_events = data['events'].length;
+		var allDates = [];
+		var UTCDates = [];
+
+		 for (var i = 0; i < number_of_events; i++) {
+
+		 	var eventDate = data['events'][i]['start']['utc'];
+		 	UTCDates.push(eventDate.substring(0,10));
+
+		 	//eventDate = eventDate.substring(0,10);
+		 	allDates.push(Date.parse(eventDate)/1000);
+
+		 };
+
+		 console.log(UTCDates);
+		 console.log(allDates);
+
+		var datesOfEvents = [];
+		var countOfEvent = [];
+
+		var currentDate = null;
+	    var counter = 0;
+	    for (var i = 0; i < allDates.length; i++) {
+	        if (allDates[i] != currentDate) {
+	            if (counter > 0) {
+	                //document.write(current + ' comes --> ' + cnt + ' times<br>');
+	                datesOfEvents.push(currentDate);
+	        		countOfEvent.push(counter);
+	            }
+	            currentDate = allDates[i];
+	            counter = 1;
+	        } else {
+	            counter++;
+	        }
+	    }
+	    if (counter > 0) {
+	        //document.write(current + ' comes --> ' + cnt + ' times');
+	        datesOfEvents.push(currentDate);
+	        countOfEvent.push(counter);
+	    }	
+
+	 
+	    var eventDateData = {};
+	    for (var i = 0; i < datesOfEvents.length; i++) {
+	    	var dates = datesOfEvents[i];
+	    	eventDateData[dates] = countOfEvent[i];
+	    };   
+
+	    var heatMapJSON = JSON.stringify(eventDateData);
+	   	heatMapJSON = heatMapJSON.substring(1, heatMapJSON.length-1);
+	   	console.log(heatMapJSON);
+
+	   	document.getElementById('cal-heatmap').innerHTML = '';
+
+	    var cal = new CalHeatMap();
+		cal.init({
+			legend: [1, 2, 3, 4],
+			data: eventDateData,
+			dataType: "json",
+			start: new Date(2015, 2),
+			id : "graph_k",
+			domain : "month",
+			subDomain : "x_day",
+			itemName: ["event", "events"]
+		});
+
+}
+	
+</script>
+</body>
+</html>
