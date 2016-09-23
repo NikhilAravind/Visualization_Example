@@ -1,0 +1,6 @@
+{
+  "name": "Visualization example",
+  "tagline": "",
+  "body": "# Visualization_Example\r\n\r\nThis application uses Eventbrite API to get event data, transforms and visualizes that data.\r\nGitHub repo: https://github.com/NikhilAravind/Visualization_Example\r\n\r\nTechnologies and libraries used:\r\n\r\n1. Node.js with Express and Jade\r\n2. C3.js - JavaScript visualization library\r\n3. Cal-Heatmap - JavaScript Heatmap visualization library\r\n\r\nNode server is configured to run on port 3000\r\n\r\nApplication URL: localhost:3000\r\n\r\nEventbrite Visualization:\r\n\r\n1. Setup the application on a machine with Node.js installed.\r\n2. Start the server and navigate to localhost:3000\r\n\r\n\r\nHome page:\r\n\r\nSelect a location from the dropdown provided.\r\nSelect a timeframe for the visualization data.\r\nSelect a type of visualization.\r\nClick on Visualize It! button.\r\n\r\nThe applcation now fires a custom request to the API and retrieves event data.\r\nThis data is modelled into a format that can be used to render visualizations.\r\nThe requested charts and graphs are rendered on screen.",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
